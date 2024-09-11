@@ -1,0 +1,13 @@
+__pycache__ 
+virt
+.env
+mysql-deployment.yaml
+sql_configmap.yaml
+flask_deploy.yaml
+mysql-secret.yaml
+db_deploy.yaml
+flask.yaml
+mysql-storage.yaml
+test_pod.yaml
+db-service.yaml
+init_db.sql
