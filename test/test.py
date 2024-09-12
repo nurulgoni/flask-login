@@ -1,46 +1,62 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from app.app import app
+from app.app import app  # Adjust the import if necessary
 
-class TestApp(unittest.TestCase):
-
+class FlaskAppTests(unittest.TestCase):
     def setUp(self):
-        # Setup Flask testing client
-        self.client = app.test_client()
-        self.app_context = app.app_context()
-        self.app_context.push()
+        self.app = app.test_client()
+        self.app.testing = True
 
-        # Patch MySQL connection
-        self.patcher = patch('flask_mysqldb.MySQL.connection', autospec=True)
-        self.mock_connection = self.patcher.start()
-        self.mock_cursor = MagicMock()
-        self.mock_connection.cursor.return_value = self.mock_cursor
+    def mock_cursor(self, fetchone_return_value=None):
+        # Create a mock cursor
+        mock_cursor = MagicMock()
+        mock_cursor.execute = MagicMock()
+        mock_cursor.fetchone.return_value = fetchone_return_value
+        return mock_cursor
 
-    def tearDown(self):
-        self.patcher.stop()
-        self.app_context.pop()
+    @patch('app.app.mysql')
+    def test_login_success(self, mock_mysql):
+        mock_cursor = self.mock_cursor({'id': 1, 'username': 'testuser'})
+        mock_mysql.connection.cursor.return_value = mock_cursor
 
-    def test_login_post_invalid(self):
-        # Setup mock to simulate failed login
-        self.mock_cursor.fetchone.return_value = None
+        response = self.app.post('/login', data={'username': 'testuser', 'password': 'testpassword'})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Hi testuser!!', response.data)
 
-        response = self.client.post('/login', data=dict(username='wrong', password='wrong'))
+    @patch('app.app.mysql')
+    def test_login_failure(self, mock_mysql):
+        mock_cursor = self.mock_cursor(None)
+        mock_mysql.connection.cursor.return_value = mock_cursor
+
+        response = self.app.post('/login', data={'username': 'testuser', 'password': 'wrongpassword'})
+        self.assertEqual(response.status_code, 200)
         self.assertIn(b'Incorrect username / password!', response.data)
+
+    @patch('app.app.mysql')
+    def test_register_success(self, mock_mysql):
+        mock_cursor = self.mock_cursor()
+        mock_mysql.connection.cursor.return_value = mock_cursor
+
+        response = self.app.post('/register', data={
+            'username': 'newuser',
+            'password': 'newpassword',
+            'email': 'newuser@example.com'
+        })
         self.assertEqual(response.status_code, 200)
+        self.assertIn(b'You have successfully registered!', response.data)
 
-    def test_logout(self):
-        # Mock login and simulate logout
-        self.client.post('/login', data=dict(username='valid_user', password='valid_password'))
-        response = self.client.get('/logout')
-        self.assertEqual(response.status_code, 302)  # Redirect status code
+    @patch('app.app.mysql')
+    def test_register_failure(self, mock_mysql):
+        mock_cursor = self.mock_cursor({'id': 1, 'username': 'existinguser'})
+        mock_mysql.connection.cursor.return_value = mock_cursor
 
-    def test_register_post_invalid(self):
-        # Setup mock to simulate registration
-        self.mock_cursor.fetchone.return_value = None
-
-        response = self.client.post('/register', data=dict(username='new_user', password='password', email='invalid'))
-        self.assertIn(b'Invalid email address!', response.data)
+        response = self.app.post('/register', data={
+            'username': 'existinguser',
+            'password': 'newpassword',
+            'email': 'newuser@example.com'
+        })
         self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Account already exists!', response.data)
 
 if __name__ == '__main__':
     unittest.main()
