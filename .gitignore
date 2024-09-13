@@ -11,3 +11,4 @@ mysql-storage.yaml
 test_pod.yaml
 db-service.yaml
 init_db.sql
+report.xml
