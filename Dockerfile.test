@@ -21,11 +21,11 @@ COPY app/requirements.txt /mysql_login/
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Install test dependencies
-RUN pip install --no-cache-dir pytest
+RUN pip install --no-cache-dir pytest pytest-html
 
 # Copy the application and test code
 COPY app/ /mysql_login/app/
 COPY test/ /mysql_login/test/
 
-# Run tests
-CMD ["python", "-m", "unittest", "discover", "test"]
+# Default command to run tests and generate the requested report
+CMD ["/bin/sh", "-c", "if [ \"$REPORT_TYPE\" = \"html\" ]; then pytest --html=report.html; cp report.html /report.html; else pytest --junitxml=report.xml; cp report.xml /report.xml; fi"]
