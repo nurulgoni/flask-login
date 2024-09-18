@@ -34,5 +34,5 @@ RUN pip install --no-cache-dir pytest pytest-html
 COPY app/ /mysql_login/app/
 COPY test/ /mysql_login/test/
 
-# Default command to run tests and generate the requested report
+##Default command to run tests and generate the requested report
 CMD ["/bin/sh", "-c", "if [ \"$REPORT_TYPE\" = \"html\" ]; then pytest --html=report.html; cp report.html /report.html; else pytest --junitxml=report.xml; cp report.xml /report.xml; fi"]
