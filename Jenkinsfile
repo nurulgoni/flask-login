@@ -24,7 +24,7 @@ pipeline {
                   -e MYSQL_DATABASE=geeklogin \
                   -e MYSQL_PORT=3306 \
                   -e REPORT_TYPE=junit \
-                  -v $(pwd):/output \
+                  -v "$(pwd)":/output \
                   --name test_container flask-test:latest
                 '''
             }
