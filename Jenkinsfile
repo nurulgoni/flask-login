@@ -35,18 +35,33 @@ pipeline {
                 sh 'docker cp test_container:/mysql_login/report.xml ./report.xml'
             }
         }
-    }
-    post {
-    always {
-        sh 'docker rm -f test_container'   // Fail if container removal fails
-        junit '**/report.xml'              // Archive test reports
-    }
-    failure {
-        echo 'The build has failed!'
-    }
-    success {
-        echo 'The build has succeeded!'
-    }
-}
 
+        stage('build-production-image') {
+            when {
+                expression {
+                    currentBuild.result == null || currentBuild.result == 'SUCCESS'
+                }
+            }
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                    sh 'docker build -f app/Dockerfile -t ngsharna/flask-app:latest app'
+                    sh 'docker push ngsharna/flask-app:latest'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker rm -f test_container'   // Fail if container removal fails
+            junit '**/report.xml'              // Archive test reports
+        }
+        failure {
+            echo 'The build has failed!'
+        }
+        success {
+            echo 'The build has succeeded!'
+        }
+    }
 }
