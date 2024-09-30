@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    environment {
+        ENV_FILE = credentials('mysql-env')  // Reference the secret file by its ID
+    }
     
     stages {
         stage('checkout') {
@@ -17,12 +20,12 @@ pipeline {
         stage('test') {
             steps {
                 sh '''
-                docker run \
-                  -e MYSQL_HOST=localhost \
-                  -e MYSQL_USER=flask \
-                  -e MYSQL_PASSWORD=password \
-                  -e MYSQL_DATABASE=geeklogin \
-                  -e MYSQL_PORT=3306 \
+                  . $ENV_FILE && docker run \
+                  -e MYSQL_HOST=$MYSQL_HOST \
+                  -e MYSQL_USER=$MYSQL_USER\
+                  -e MYSQL_PASSWORD=$MYSQL_PASSWORD \
+                  -e MYSQL_DATABASE=$MYSQL_DATABASE \
+                  -e MYSQL_PORT=$MYSQL_PORT \
                   -e REPORT_TYPE=junit \
                   -v "$(pwd)":/output \
                   --name test_container flask-test:latest
