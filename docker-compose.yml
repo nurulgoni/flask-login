@@ -13,7 +13,7 @@ services:
 
     volumes:
       - ./init_db.sql:/docker-entrypoint-initdb.d/init.sql
-      - mysql-data:/var/lib/mysql
+    #  - mysql-data:/var/lib/mysql
     # volumes:
     #   - pgdata:/var/lib/postgresql/data
     ports:
@@ -48,8 +48,8 @@ services:
       db:
         condition: service_healthy
 
-volumes:
-  mysql-data:
+#volumes:
+#  mysql-data:
 
 networks:
   my-network:
