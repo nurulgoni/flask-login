@@ -53,6 +53,23 @@ pipeline {
                 }
             }
         }
+        
+        stage('deploy') {
+            when {
+                expression {
+                    currentBuild.result == null || currentBuild.result == 'SUCCESS'
+                }
+            }
+            steps {
+                withCredentials([file(credentialsId: 'mysql-env', variable: 'ENV_FILE')]) {
+                    sh '''
+                    . $ENV_FILE
+                    docker-compose down   
+                    docker-compose up -d  
+                    '''
+                }
+            }
+        }
     }
 
     post {

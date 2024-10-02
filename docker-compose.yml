@@ -28,11 +28,11 @@ services:
       retries: 5
 
   web:
-    build:
-      context: ./app
-      dockerfile: Dockerfile
-    image: flask-ng:latest
-    container_name: flask-app
+    # build:
+    #   context: ./app
+    #   dockerfile: Dockerfile
+    image: ngsharna/flask-app:latest
+    container_name: flask-app-container
     environment:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
