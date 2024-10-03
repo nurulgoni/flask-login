@@ -11,8 +11,8 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
 
-    volumes:
-      - ./init_db.sql:/docker-entrypoint-initdb.d/init.sql
+    #volumes:
+    #  - ./init_db.sql:/docker-entrypoint-initdb.d/init.sql
     #  - mysql-data:/var/lib/mysql
     # volumes:
     #   - pgdata:/var/lib/postgresql/data
