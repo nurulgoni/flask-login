@@ -22,7 +22,7 @@ pipeline {
                 sh '''
                   . $ENV_FILE && docker run \
                   -e MYSQL_HOST=$MYSQL_HOST \
-                  -e MYSQL_USER=$MYSQL_USER\
+                  -e MYSQL_USER=$MYSQL_USER \
                   -e MYSQL_PASSWORD=$MYSQL_PASSWORD \
                   -e MYSQL_DATABASE=$MYSQL_DATABASE \
                   -e MYSQL_PORT=$MYSQL_PORT \
@@ -57,17 +57,20 @@ pipeline {
         stage('create-env-file') {
             steps {
                 script {
-                    writeFile file: '.env', text: '''
-                    MYSQL_USER=${MYSQL_USER}
-                    MYSQL_PASSWORD=${MYSQL_PASSWORD}
-                    MYSQL_DATABASE=${MYSQL_DATABASE}
-                    MYSQL_HOST=${MYSQL_HOST}
-                    MYSQL_PORT=${MYSQL_PORT}
-                    '''
+                    def envContent = """
+                    MYSQL_USER=${env.MYSQL_USER}
+                    MYSQL_PASSWORD=${env.MYSQL_PASSWORD}
+                    MYSQL_DATABASE=${env.MYSQL_DATABASE}
+                    MYSQL_HOST=${env.MYSQL_HOST}
+                    MYSQL_PORT=${env.MYSQL_PORT}
+                    MYSQL_ROOT_PASSWORD=${env.MYSQL_ROOT_PASSWORD}
+                    """.trim() // Remove any surrounding whitespace, newlines
+
+                    writeFile file: '.env', text: envContent
                 }
             }
         }
-        
+
         stage('deploy') {
             when {
                 expression {
@@ -76,8 +79,8 @@ pipeline {
             }
             steps {
                 sh '''
-                docker-compose down
-                docker-compose up -d
+                docker-compose down   
+                docker-compose up -d  
                 '''
             }
         }
