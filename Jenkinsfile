@@ -53,6 +53,20 @@ pipeline {
                 }
             }
         }
+
+        stage('create-env-file') {
+            steps {
+                script {
+                    writeFile file: '.env', text: '''
+                    MYSQL_USER=${MYSQL_USER}
+                    MYSQL_PASSWORD=${MYSQL_PASSWORD}
+                    MYSQL_DATABASE=${MYSQL_DATABASE}
+                    MYSQL_HOST=${MYSQL_HOST}
+                    MYSQL_PORT=${MYSQL_PORT}
+                    '''
+                }
+            }
+        }
         
         stage('deploy') {
             when {
@@ -61,13 +75,10 @@ pipeline {
                 }
             }
             steps {
-                withCredentials([file(credentialsId: 'mysql-env', variable: 'ENV_FILE')]) {
-                    sh '''
-                    . $ENV_FILE
-                    docker-compose down   
-                    docker-compose up -d  
-                    '''
-                }
+                sh '''
+                docker-compose down
+                docker-compose up -d
+                '''
             }
         }
     }
