@@ -17,12 +17,27 @@ pipeline {
             }
         }
 
+        stage('create-env-file') {
+            steps {
+                script {
+                    sh '''
+                    echo "MYSQL_USER=${MYSQL_USER}" >> .env
+                    echo "MYSQL_PASSWORD=${MYSQL_PASSWORD}" >> .env
+                    echo "MYSQL_DATABASE=${MYSQL_DATABASE}" >> .env
+                    echo "MYSQL_HOST=${MYSQL_HOST}" >> .env
+                    echo "MYSQL_PORT=${MYSQL_PORT}" >> .env
+                    echo "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}" >> .env
+                    '''
+                }
+            }
+        }
+
         stage('test') {
             steps {
                 sh '''
                   . $ENV_FILE && docker run \
                   -e MYSQL_HOST=$MYSQL_HOST \
-                  -e MYSQL_USER=$MYSQL_USER \
+                  -e MYSQL_USER=$MYSQL_USER\
                   -e MYSQL_PASSWORD=$MYSQL_PASSWORD \
                   -e MYSQL_DATABASE=$MYSQL_DATABASE \
                   -e MYSQL_PORT=$MYSQL_PORT \
@@ -53,24 +68,7 @@ pipeline {
                 }
             }
         }
-
-        stage('create-env-file') {
-            steps {
-                script {
-                    def envContent = """
-                    MYSQL_USER=${env.MYSQL_USER}
-                    MYSQL_PASSWORD=${env.MYSQL_PASSWORD}
-                    MYSQL_DATABASE=${env.MYSQL_DATABASE}
-                    MYSQL_HOST=${env.MYSQL_HOST}
-                    MYSQL_PORT=${env.MYSQL_PORT}
-                    MYSQL_ROOT_PASSWORD=${env.MYSQL_ROOT_PASSWORD}
-                    """.trim() // Remove any surrounding whitespace, newlines
-
-                    writeFile file: '.env', text: envContent
-                }
-            }
-        }
-
+        
         stage('deploy') {
             when {
                 expression {
