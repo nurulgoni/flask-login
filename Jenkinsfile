@@ -19,16 +19,8 @@ pipeline {
 
         stage('create-env-file') {
             steps {
-                script {
-                    sh '''
-                    echo "MYSQL_USER=${MYSQL_USER}" >> .env
-                    echo "MYSQL_PASSWORD=${MYSQL_PASSWORD}" >> .env
-                    echo "MYSQL_DATABASE=${MYSQL_DATABASE}" >> .env
-                    echo "MYSQL_HOST=${MYSQL_HOST}" >> .env
-                    echo "MYSQL_PORT=${MYSQL_PORT}" >> .env
-                    echo "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}" >> .env
-                    '''
-                }
+                // Copy the secret file to .env, so Docker Compose and other steps can use it
+                sh 'cp $ENV_FILE .env'
             }
         }
 
