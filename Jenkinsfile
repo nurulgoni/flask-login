@@ -1,9 +1,13 @@
 pipeline {
     agent any
     environment {
-        ENV_FILE = credentials('mysql-env')  // Reference the secret file by its ID
+        ENV_FILE = credentials('mysql-env')
     }
     
+    parameters {
+        file(name: 'INIT_DB_SQL', description: 'Upload the SQL file for database initialization')
+    }
+
     stages {
         stage('checkout') {
             steps {
@@ -19,7 +23,6 @@ pipeline {
 
         stage('create-env-file') {
             steps {
-                // Copy the secret file to .env, so Docker Compose and other steps can use it
                 sh 'cp $ENV_FILE .env'
             }
         }
@@ -27,31 +30,27 @@ pipeline {
         stage('test') {
             steps {
                 sh '''
-                  . $ENV_FILE && docker run \
-                  -e MYSQL_HOST=$MYSQL_HOST \
-                  -e MYSQL_USER=$MYSQL_USER\
-                  -e MYSQL_PASSWORD=$MYSQL_PASSWORD \
-                  -e MYSQL_DATABASE=$MYSQL_DATABASE \
-                  -e MYSQL_PORT=$MYSQL_PORT \
-                  -e REPORT_TYPE=junit \
-                  -v "$(pwd)":/output \
-                  --name test_container flask-test:latest
+                . $ENV_FILE && docker run \
+                -e MYSQL_HOST=$MYSQL_HOST \
+                -e MYSQL_USER=$MYSQL_USER \
+                -e MYSQL_PASSWORD=$MYSQL_PASSWORD \
+                -e MYSQL_DATABASE=$MYSQL_DATABASE \
+                -e MYSQL_PORT=$MYSQL_PORT \
+                -e REPORT_TYPE=junit \
+                -v "$(pwd)":/output \
+                --name test_container flask-test:latest
                 '''
             }
         }
 
-        stage('report-generate') {
+        stage('Prepare Deployment') {
             steps {
-                sh 'docker cp test_container:/mysql_login/report.xml ./report.xml'
+                // No need to copy file to container
+                echo 'init_db.sql file is present in the workspace and ready to use.'
             }
         }
 
         stage('build-production-image') {
-            when {
-                expression {
-                    currentBuild.result == null || currentBuild.result == 'SUCCESS'
-                }
-            }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                     sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
@@ -60,13 +59,8 @@ pipeline {
                 }
             }
         }
-        
+
         stage('deploy') {
-            when {
-                expression {
-                    currentBuild.result == null || currentBuild.result == 'SUCCESS'
-                }
-            }
             steps {
                 sh '''
                 docker-compose down   
@@ -78,8 +72,8 @@ pipeline {
 
     post {
         always {
-            sh 'docker rm -f test_container'   // Fail if container removal fails
-            junit '**/report.xml'              // Archive test reports
+            sh 'docker rm -f test_container'
+            junit '**/report.xml'
         }
         failure {
             echo 'The build has failed!'
