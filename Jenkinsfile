@@ -27,6 +27,13 @@ pipeline {
             }
         }
 
+        stage('copy-init-db-sql') {
+            steps {
+                // Copy INIT_DB_SQL parameter to the workspace as init_db.sql
+                sh 'cp ${INIT_DB_SQL} ./init_db.sql'
+            }
+        }
+
         stage('test') {
             steps {
                 sh '''
@@ -46,8 +53,6 @@ pipeline {
         stage('Prepare Deployment') {
             steps {
                 sh 'ls -l ./init_db.sql'
-                // No need to copy file to container
-                //echo 'init_db.sql file is present in the workspace and ready to use.'
             }
         }
 
