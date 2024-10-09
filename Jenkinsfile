@@ -30,7 +30,7 @@ pipeline {
         stage('copy-init-db-sql') {
             steps {
                 // Copy INIT_DB_SQL parameter to the workspace as init_db.sql
-                sh 'cp ${INIT_DB_SQL} ./init_db.sql'
+                sh 'cp ${params.INIT_DB_SQL} ./init_db.sql'
             }
         }
 
