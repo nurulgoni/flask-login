@@ -45,8 +45,9 @@ pipeline {
 
         stage('Prepare Deployment') {
             steps {
+                sh 'ls -l ./init_db.sql'
                 // No need to copy file to container
-                echo 'init_db.sql file is present in the workspace and ready to use.'
+                //echo 'init_db.sql file is present in the workspace and ready to use.'
             }
         }
 
