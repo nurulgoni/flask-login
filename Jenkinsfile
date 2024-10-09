@@ -28,11 +28,19 @@ pipeline {
         }
 
         stage('copy-init-db-sql') {
-            steps {
-                // Copy INIT_DB_SQL parameter to the workspace as init_db.sql
+    steps {
+        script {
+            echo "INIT_DB_SQL parameter: ${params.INIT_DB_SQL}"
+            // Check if the INIT_DB_SQL parameter is set and not empty
+            if (params.INIT_DB_SQL != null && params.INIT_DB_SQL.trim() != '') {
                 sh "cp '${params.INIT_DB_SQL}' ./init_db.sql"
+            } else {
+                error "INIT_DB_SQL parameter is not set or is empty."
             }
         }
+    }
+}
+
 
 
         stage('test') {
