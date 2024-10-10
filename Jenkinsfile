@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     parameters {
-        file(name: 'INIT_DB_SQL', description: 'Upload the SQL file for database initialization')
+        base64File description: 'Upload the database file', name: 'init_db'
     }
 
     stages {
@@ -14,23 +14,9 @@ pipeline {
 
         stage('copy-init-db-sql') {
             steps {
-                script {
-                    echo "INIT_DB_SQL parameter: ${params.INIT_DB_SQL}"
-
-                    // Check if the INIT_DB_SQL parameter is set
-                    if (params.INIT_DB_SQL != null) {
-                        sh "cp '${params.INIT_DB_SQL}' ./init_db.sql"
-                        echo "SQL file copied as init_db.sql"
-                    } else {
-                        error "INIT_DB_SQL parameter is not set or is empty."
-                    }
+                withFileParameter('init_db') {
+                    sh 'cat $init_db'
                 }
-            }
-        }
-
-        stage('Prepare Deployment') {
-            steps {
-                sh 'ls -l ./init_db.sql'
             }
         }
     }
