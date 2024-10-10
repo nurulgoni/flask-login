@@ -15,7 +15,7 @@ pipeline {
         stage('copy-init-db-sql') {
             steps {
                 withFileParameter('init_db') {
-                    sh 'cat $init_db'
+                    sh 'cat $init_db > init_db.sql'
                 }
             }
         }
