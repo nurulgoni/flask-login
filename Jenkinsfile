@@ -1,8 +1,12 @@
 pipeline {
     agent any
+    environment {
+        ENV_FILE = credentials('mysql-env')
+    }
+    
 
     parameters {
-        base64File description: 'Upload the database file', name: 'init_db'
+        base64File description: 'Upload the database file', name: 'INIT_DB_SQL'
     }
 
     stages {
@@ -17,6 +21,12 @@ pipeline {
                 withFileParameter('init_db') {
                     sh 'cat $init_db > init_db.sql'
                 }
+            }
+        }
+
+        stage('create-env-file') {
+            steps {
+                sh 'cp $ENV_FILE .env'
             }
         }
     }
