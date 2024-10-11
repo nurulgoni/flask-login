@@ -51,6 +51,16 @@ pipeline {
             }
         }
 
+        stage('build-production-image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                    sh 'docker build -f app/Dockerfile -t ngsharna/flask-app:latest app'
+                    sh 'docker push ngsharna/flask-app:latest'
+                }
+            }
+        }
+
         stage('Prepare Deployment') {
             steps {
                 sh 'ls -l ./init_db.sql'
