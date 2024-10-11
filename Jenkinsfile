@@ -29,6 +29,12 @@ pipeline {
                 sh 'cp $ENV_FILE .env'
             }
         }
+
+        stage('Prepare Deployment') {
+            steps {
+                sh 'ls -l ./init_db.sql'
+            }
+        }
     }
 
     post {
