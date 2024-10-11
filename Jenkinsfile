@@ -29,6 +29,27 @@ pipeline {
                 sh 'cp $ENV_FILE .env'
             }
         }
+        stage('build-test') {
+            steps {
+                sh 'docker build -f Dockerfile.test -t flask-test:latest .'
+            }
+        }
+
+        stage('testing') {
+            steps {
+                sh '''
+                . $ENV_FILE && docker run \
+                -e MYSQL_HOST=$MYSQL_HOST \
+                -e MYSQL_USER=$MYSQL_USER \
+                -e MYSQL_PASSWORD=$MYSQL_PASSWORD \
+                -e MYSQL_DATABASE=$MYSQL_DATABASE \
+                -e MYSQL_PORT=$MYSQL_PORT \
+                -e REPORT_TYPE=junit \
+                -v "$(pwd)":/output \
+                --name test_container flask-test:latest
+                '''
+            }
+        }
 
         stage('Prepare Deployment') {
             steps {
