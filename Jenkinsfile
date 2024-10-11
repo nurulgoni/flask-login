@@ -78,6 +78,10 @@ pipeline {
     }
 
     post {
+        always {
+            sh 'docker rm -f test_container'
+            junit '**/report.xml'
+        }
         failure {
             echo 'The build has failed!'
         }
