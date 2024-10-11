@@ -35,6 +35,15 @@ pipeline {
                 sh 'ls -l ./init_db.sql'
             }
         }
+
+        stage('deploy') {
+            steps {
+                sh '''
+                docker-compose down   
+                docker-compose up -d  
+                '''
+            }
+        }
     }
 
     post {
