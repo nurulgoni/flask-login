@@ -4,20 +4,23 @@ pipeline {
         ENV_FILE = credentials('mysql-env')
     }
     
+
     parameters {
-        file(name: 'INIT_DB_SQL', description: 'Upload the SQL file for database initialization')
+        base64File description: 'Upload the database file', name: 'INIT_DB_SQL'
     }
 
     stages {
         stage('checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/nurulgoni/flask-login.git'
+                git branch: 'test', url: 'https://github.com/nurulgoni/flask-login.git'
             }
         }
 
-        stage('build') {
+        stage('copy-init-db-sql') {
             steps {
-                sh 'docker build -f Dockerfile.test -t flask-test:latest .'
+                withFileParameter('INIT_DB_SQL') {
+                    sh 'cat $INIT_DB_SQL > init_db.sql'
+                }
             }
         }
 
@@ -26,24 +29,13 @@ pipeline {
                 sh 'cp $ENV_FILE .env'
             }
         }
-
-        stage('copy-init-db-sql') {
-    steps {
-        script {
-            echo "INIT_DB_SQL parameter: ${params.INIT_DB_SQL}"
-            // Check if the INIT_DB_SQL parameter is set and not empty
-            if (params.INIT_DB_SQL != null && params.INIT_DB_SQL.trim() != '') {
-                sh "cp '${params.INIT_DB_SQL}' ./init_db.sql"
-            } else {
-                error "INIT_DB_SQL parameter is not set or is empty."
+        stage('build-test') {
+            steps {
+                sh 'docker build -f Dockerfile.test -t flask-test:latest .'
             }
         }
-    }
-}
 
-
-
-        stage('test') {
+        stage('testing') {
             steps {
                 sh '''
                 . $ENV_FILE && docker run \
@@ -59,12 +51,6 @@ pipeline {
             }
         }
 
-        stage('Prepare Deployment') {
-            steps {
-                sh 'ls -l ./init_db.sql'
-            }
-        }
-
         stage('build-production-image') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
@@ -72,6 +58,12 @@ pipeline {
                     sh 'docker build -f app/Dockerfile -t ngsharna/flask-app:latest app'
                     sh 'docker push ngsharna/flask-app:latest'
                 }
+            }
+        }
+
+        stage('Prepare Deployment') {
+            steps {
+                sh 'ls -l ./init_db.sql'
             }
         }
 
