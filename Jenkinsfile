@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('checkout') {
             steps {
-                git branch: 'test', url: 'https://github.com/nurulgoni/flask-login.git'
+                git branch: 'main', url: 'https://github.com/nurulgoni/flask-login.git'
             }
         }
 
